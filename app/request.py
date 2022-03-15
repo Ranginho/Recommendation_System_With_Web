@@ -208,7 +208,7 @@ def techArticles():
     for i in range(len(all_articles)):
         article = all_articles[i]
 
-        data_dict['article_name'] = article['title']
+        data_dict['article_name'] = article['title'] + "opana"
         data_dict['article_description'] = article['description']
         data_dict['article_image_path'] = article['urlToImage']
         data_dict['link_to_article'] = article['url']

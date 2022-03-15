@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, text
 
 class Articles(db.Model):
     article_id = db.Column(db.Integer, primary_key = True)
-    article_name = db.Column(db.String(), nullable = False)
+    article_name = db.Column(db.String(), nullable = False, unique = True)
     article_description = db.Column(db.String())
     article_image_path = db.Column(db.String(), nullable = False)
     link_to_article = db.Column(db.String())
@@ -59,7 +59,7 @@ class Helpers():
             table_name (str) : Name of table where we want to insert data
             data (dict) : Dictionary of data we need to insert
         """
-
+        
         engine = create_engine('sqlite:///C:\\Users\\admin\\Desktop\\Rango\\Projects\\Recommendation_System_With_Web\\app\\news.db')
         conn = engine.connect()
         try:
@@ -81,5 +81,5 @@ class Helpers():
         except Exception as e:
             print(e)
     
-    
-    
+    def fill_recommendations():
+        pass
