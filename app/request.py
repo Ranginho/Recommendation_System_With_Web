@@ -4,6 +4,7 @@ from newsapi import NewsApiClient
 from .config import Config
 import urllib.request,json
 import json
+from app.database import Helpers
 
 api_key=None
 base_url=None
@@ -198,6 +199,29 @@ def techArticles():
     #with open("out.json", "w") as out_f:
     #    json.dump(list(contents), out_f)
     '''
+
+    newsapi = NewsApiClient(api_key= Config.API_KEY)
+    tech_articles = newsapi.get_top_headlines(category='technology')
+    all_articles = tech_articles['articles']
+
+    data_dict = {}
+    for i in range(len(all_articles)):
+        article = all_articles[i]
+
+        data_dict['article_name'] = article['title']
+        data_dict['article_description'] = article['description']
+        data_dict['article_image_path'] = article['urlToImage']
+        data_dict['link_to_article'] = article['url']
+        data_dict['article_category'] = 'technology'
+        Helpers.insert(table_name = 'articles', data = data_dict)
+        data_dict = {}
+    
+
+
+
+
+
+    #------------------------------------------------------------------------------------------
 
     data = ''
     with open('out.json') as json_file:
