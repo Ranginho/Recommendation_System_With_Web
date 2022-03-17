@@ -31,7 +31,7 @@ class Recommendations(db.Model):
 
 class Helpers():
     # select('articles', ('article_id, article_name'), 'article_id < 10')
-    def select(table_name: str, columns_select: str, filter: str = None) -> list:
+    def select(table_name: str, columns_select: str, filter: str = None, order_columns: str = None, order_asc: bool = None) -> list:
         """ Method for select data from mysql table
 
         Args:
@@ -49,8 +49,17 @@ class Helpers():
             query = f"SELECT * FROM {table_name}"
         else:
             query = f"SELECT {columns_select} FROM {table_name}"
+        
         if filter is not None:
             query += f" WHERE {filter}"
+        
+        if order_columns is not None:
+            query += f" ORDERY BY {order_columns} "
+            if order_asc == True:
+                query += "asc"
+            else:
+                query += "desc"
+        
         try:
             exec_res = conn.execute(text(query))
             res = [row for row in exec_res]
@@ -121,7 +130,7 @@ class Helpers():
             data (str) : data to insert/update 
         """
 
-        row_exists = len(Helpers.select(table_name, '*', f'main_article_id = {main_article_id}'))>0
+        row_exists = len(Helpers.select(table_name, '*', f'main_article_id = {main_article_id}', None, None))>0
         if row_exists:
             Helpers.update(table_name, update_column, main_article_id, update_string)
         else:
@@ -134,29 +143,34 @@ class Helpers():
         Args:
             filter (str) : we filter data with this parameter and filtered data will be filled
         """
-
+        all_articles = Helpers.select('articles', 'article_id, article_name, article_description', None, None)
+        if(len(all_articles) % 100 ==0):
+            articles_to_fill = all_articles
+        else:
+            articles_to_fill = Helpers.select('articles', 'article_id, article_name', filter, "article_id", False)[0:20]
         tfidf = TfidfVectorizer(stop_words='english')
-        articles = Helpers.select('articles', 'article_id, article_name, article_description', filter)
-        articles_df = pd.DataFrame(articles, columns=['article_id', 'article_name', 'article_description'])
+        articles_df = pd.DataFrame(all_articles, columns=['article_id', 'article_name', 'article_description'])
         tfidf_matrix = tfidf.fit_transform(articles_df['article_description'])
         cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix, True)
+        
+        for elem in articles_to_fill:
+            article_id = elem[0]
+            article_name = elem[1]
+            recommendations = Helpers.get_recommendations(article_name, article_id, cosine_sim, articles_df)
 
-        recommendations = Helpers.get_recommendations('Google says Steam has arrived on Chromebooks, let us know if you find it? - The Vergeopana', 
-                                                0, cosine_sim, articles_df)
+            data = {
+                "recommendation_1_id" : recommendations[0],
+                "recommendation_2_id" : recommendations[1],
+                "recommendation_3_id" : recommendations[2],
+                "recommendation_4_id" : recommendations[3],
+                "recommendation_5_id" : recommendations[4]
+            }
 
-        data = {
-            "recommendation_1_id" : recommendations[0],
-            "recommendation_2_id" : recommendations[1],
-            "recommendation_3_id" : recommendations[2],
-            "recommendation_4_id" : recommendations[3],
-            "recommendation_5_id" : recommendations[4]
-        }
-
-        update_string = f"recommendation_1_id = {recommendations[0]}, recommendation_2_id = {recommendations[1]}, \
-                        recommendation_3_id = {recommendations[2]}, recommendation_4_id = {recommendations[3]}, \
-                        recommendation_5_id = {recommendations[4]}"
-        main_article_id = 1
-        Helpers.if_exists_update_else_insert('recommendations', main_article_id, data, 'main_article_id', update_string)
+            update_string = f"recommendation_1_id = {recommendations[0]}, recommendation_2_id = {recommendations[1]}, \
+                            recommendation_3_id = {recommendations[2]}, recommendation_4_id = {recommendations[3]}, \
+                            recommendation_5_id = {recommendations[4]}"
+            
+            Helpers.if_exists_update_else_insert('recommendations', article_id, data, 'main_article_id', update_string)
         
 
     # Function that takes in article title as input and outputs most similar articles
@@ -174,7 +188,7 @@ class Helpers():
         """
 
         # Get the pairwsie similarity scores of all articles with that article
-        sim_scores = list(enumerate(cosine_sim[idx]))
+        sim_scores = list(enumerate(cosine_sim[idx-1]))
 
         # Sort the articles based on the similarity scores
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)

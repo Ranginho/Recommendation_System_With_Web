@@ -203,7 +203,9 @@ def techArticles():
     newsapi = NewsApiClient(api_key= Config.API_KEY)
     tech_articles = newsapi.get_top_headlines(category='technology')
     all_articles = tech_articles['articles']
-    
+    print("...........................................")
+    print(len(all_articles))
+    print("...........................................")
     data_dict = {}
     for i in range(len(all_articles)):
         article = all_articles[i]
