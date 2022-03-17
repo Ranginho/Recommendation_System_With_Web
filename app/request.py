@@ -202,23 +202,25 @@ def techArticles():
 
     newsapi = NewsApiClient(api_key= Config.API_KEY)
     tech_articles = newsapi.get_top_headlines(category='technology')
+    
     all_articles = tech_articles['articles']
-    print("...........................................")
-    print(len(all_articles))
-    print("...........................................")
     data_dict = {}
+
     for i in range(len(all_articles)):
         article = all_articles[i]
         
         data_dict['article_name'] = article['title']
-        data_dict['article_description'] = article['description']
-        data_dict['article_image_path'] = article['urlToImage']
-        data_dict['link_to_article'] = article['url']
+        data_dict['article_description'] = article['description'] if article['description'] is not None else 'N\A'
+        data_dict['article_image_path'] = article['urlToImage'] if article['urlToImage'] is not None else 'N\A'
+        data_dict['link_to_article'] = article['url'] if article['url'] is not None else 'N\A'
         data_dict['article_category'] = 'technology'
-        
+        data_dict['article_author'] = article['author'] if article['author'] is not None else 'N\A'
+        data_dict['article_publish_date'] = article['publishedAt'] if article['publishedAt'] is not None else 'N\A'
+
         Helpers.insert(table_name = 'articles', data = data_dict)
         data_dict = {}
-    Helpers.fill_recommendations()
+
+    #Helpers.fill_recommendations()
     
 
 

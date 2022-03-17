@@ -12,6 +12,8 @@ class Articles(db.Model):
     article_image_path = db.Column(db.String(), nullable = False)
     link_to_article = db.Column(db.String())
     article_category = db.Column(db.String())
+    article_author = db.Column(db.String())
+    article_publish_date = db.Column(db.String())
 
     def __repr__(self):
         return f"article: '{self.article_name}', '{self.article_description}'"
@@ -143,6 +145,7 @@ class Helpers():
         Args:
             filter (str) : we filter data with this parameter and filtered data will be filled
         """
+
         all_articles = Helpers.select('articles', 'article_id, article_name, article_description', None, None)
         if(len(all_articles) % 100 ==0):
             articles_to_fill = all_articles
