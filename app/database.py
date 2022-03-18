@@ -32,7 +32,9 @@ class Recommendations(db.Model):
               '{self.recommendation_5_id}'"
 
 class Helpers():
-    # select('articles', ('article_id, article_name'), 'article_id < 10')
+    """
+    In this class we have methods related to sql database
+    """
     def select(table_name: str, columns_select: str, filter: str = None, order_columns: str = None, order_asc: bool = None) -> list:
         """ Method for select data from mysql table
 
@@ -56,7 +58,7 @@ class Helpers():
             query += f" WHERE {filter}"
         
         if order_columns is not None:
-            query += f" ORDERY BY {order_columns} "
+            query += f" ORDER BY {order_columns} "
             if order_asc == True:
                 query += "asc"
             else:
@@ -137,7 +139,6 @@ class Helpers():
             Helpers.update(table_name, update_column, main_article_id, update_string)
         else:
             Helpers.insert(table_name, data)
-
     
     def fill_recommendations(filter: str = None) -> None:
         """ Method for fill recommendations table. 
@@ -190,19 +191,10 @@ class Helpers():
             res (list) : list of recommended article ids
         """
 
-        # Get the pairwsie similarity scores of all articles with that article
         sim_scores = list(enumerate(cosine_sim[idx-1]))
-
-        # Sort the articles based on the similarity scores
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-
-        # Get the scores of the 10 most similar articles
         sim_scores = sim_scores[1:11]
-
-        # Get the article indices
         article_indices = [i[0] for i in sim_scores]
-
-        # Return the top 10 most similar articles and their indices
-        #return data['article_name'].iloc[article_indices], [(i+1) for i in article_indices]
         res = [(i+1) for i in article_indices]
+
         return res
