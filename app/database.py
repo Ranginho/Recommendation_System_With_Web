@@ -140,18 +140,21 @@ class Helpers():
         else:
             Helpers.insert(table_name, data)
     
-    def fill_recommendations(filter: str = None) -> None:
+    def fill_recommendations(category: str = None) -> None:
         """ Method for fill recommendations table. 
 
         Args:
             filter (str) : we filter data with this parameter and filtered data will be filled
         """
 
-        all_articles = Helpers.select('articles', 'article_id, article_name, article_description', None, None)
+        all_articles = Helpers.select('articles', 'article_id, article_name, article_description', 
+                                    f"article_category = '{category}'")
+        
         if(len(all_articles) % 100 ==0):
             articles_to_fill = all_articles
         else:
             articles_to_fill = Helpers.select('articles', 'article_id, article_name', filter, "article_id", False)[0:20]
+
         tfidf = TfidfVectorizer(stop_words='english')
         articles_df = pd.DataFrame(all_articles, columns=['article_id', 'article_name', 'article_description'])
         tfidf_matrix = tfidf.fit_transform(articles_df['article_description'])
@@ -161,6 +164,14 @@ class Helpers():
             article_id = elem[0]
             article_name = elem[1]
             recommendations = Helpers.get_recommendations(article_name, article_id, cosine_sim, articles_df)
+            recommendations = set(list(recommendations))
+
+            unique_recommendation = []
+            for rec in recommendations:
+                # check if exists in unique_list or not
+                if rec not in unique_recommendation and rec != article_id:
+                    unique_recommendation.append(rec)
+            recommendations = unique_recommendation
 
             data = {
                 "recommendation_1_id" : recommendations[0],
@@ -176,10 +187,8 @@ class Helpers():
             
             Helpers.if_exists_update_else_insert('recommendations', article_id, data, 'main_article_id', update_string)
         
-
-    # Function that takes in article title as input and outputs most similar articles
     def get_recommendations(title: str, idx: int, cosine_sim, data) -> list:
-        """ Method that finds similarity between articles
+        """ Method that takes in article title as input and outputs most similar articles
 
         Args:
             title (str) : title of article for which we are searching similarities

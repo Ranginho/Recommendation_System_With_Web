@@ -183,7 +183,7 @@ def techArticles():
         Helpers.insert(table_name = 'articles', data = data_dict)
         data_dict = {}
 
-    Helpers.fill_recommendations()
+    Helpers.fill_recommendations("technology")
 
     source = []
     title = []
@@ -196,8 +196,15 @@ def techArticles():
     recommendation_names_links = []
 
     num_articles = len(Helpers.select(table_name = 'articles', columns_select="*"))
+    article_ids_to_display = []
     for _ in range(ARTICLES_PER_PAGE):
         article_id = randint(1, num_articles)
+
+        if article_id in article_ids_to_display:
+            continue
+        else:
+            article_ids_to_display.append(article_id)
+
         main_article_info = Helpers.select(table_name = 'articles', columns_select="*", 
                             filter = f"article_id = {article_id}")[0]
 
