@@ -162,48 +162,6 @@ def businessArticles():
     return  contents
 
 def techArticles():
-    '''
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
-
-    tech_articles = newsapi.get_top_headlines(category='technology')
-
-    all_articles = tech_articles['articles']
-
-    tech_articles_results = []
-
-    source = []
-    title = []
-    desc = []
-    author = []
-    img = []
-    p_date = []
-    url = []
-    contents = []
-    for i in range(len(all_articles)):
-        article = all_articles[i]
-
-        source.append(article['source'])
-        title.append(article['title'])
-        desc.append(article['description'])
-        author.append(article['author'])
-        img.append(article['urlToImage'])
-        p_date.append(article['publishedAt'])
-        #url.append('/recommendation')
-        url.append(article['url'])
-
-        article_object = Articles(source, title, desc, author, img, p_date, url)
-        
-        tech_articles_results.append(article_object)
-
-        contents = zip(source, title, desc, author, img, p_date, url)
-        
-        #print("requests.py-dan: ", *curr_content)
-    #global curr_content
-    #curr_content = desc
-    #read_data()
-    #with open("out.json", "w") as out_f:
-    #    json.dump(list(contents), out_f)
-    '''
 
     newsapi = NewsApiClient(api_key= Config.API_KEY)
     tech_articles = newsapi.get_top_headlines(category='technology')
@@ -226,8 +184,6 @@ def techArticles():
         data_dict = {}
 
     Helpers.fill_recommendations()
-    
-
 
     source = []
     title = []
@@ -244,26 +200,16 @@ def techArticles():
         article_id = randint(1, num_articles)
         main_article_info = Helpers.select(table_name = 'articles', columns_select="*", 
                             filter = f"article_id = {article_id}")[0]
+
         recommendations_ids = Helpers.select(table_name = 'recommendations', 
                                 columns_select = "recommendation_1_id, recommendation_2_id, \
                                                   recommendation_3_id, recommendation_4_id, \
                                                   recommendation_5_id", 
                                 filter = f"main_article_id = {article_id}")[0]
+                                
         recommended_names_links = Helpers.select(table_name = 'articles', 
                                         columns_select = "article_name, link_to_article", 
                                         filter = f"article_id IN {recommendations_ids}")
-        
-        recommendations = f"""
-        name: {recommended_names_links[0][0]}
-        link: {recommended_names_links[0][1]}
-        name: {recommended_names_links[1][0]}
-        link: {recommended_names_links[1][1]}
-        name: {recommended_names_links[2][0]}
-        link: {recommended_names_links[2][1]}
-        name: {recommended_names_links[3][0]}
-        link: {recommended_names_links[3][1]}
-        name: {recommended_names_links[4][0]}
-        link: {recommended_names_links[4][1]}"""
         
         source.append("")
         title.append(main_article_info[1])
@@ -272,13 +218,7 @@ def techArticles():
         img.append(main_article_info[3])
         p_date.append(main_article_info[7])
         url.append(main_article_info[4])
-        recommendation_names_links.append(recommendations)
-
-        print("********************************************************")
-        # print(main_article_info)
-        # print(recommendations_ids)
-        print(recommended_names_links)
-        print("********************************************************")
+        recommendation_names_links.append(recommended_names_links)
 
     contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
     return  contents
