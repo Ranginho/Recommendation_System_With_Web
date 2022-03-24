@@ -134,33 +134,33 @@ class Helpers():
             data (str) : data to insert/update 
         """
 
-        row_exists = len(Helpers.select(table_name, '*', f'main_article_id = {main_article_id}', None, None))>0
-        if row_exists:
+        select_row = Helpers.select(table_name, 'main_article_id', f"main_article_id = '{main_article_id}'")
+
+        if len(select_row) > 0:
+            print(select_row)
             Helpers.update(table_name, update_column, main_article_id, update_string)
         else:
             Helpers.insert(table_name, data)
     
-    def fill_recommendations(category: str = None) -> None:
+    def fill_recommendations(articles_to_fill, category: str = None) -> None:
         """ Method for fill recommendations table. 
 
         Args:
             filter (str) : we filter data with this parameter and filtered data will be filled
         """
 
-        all_articles = Helpers.select('articles', 'article_id, article_name, article_description', 
-                                    f"article_category = '{category}'")
+        all_articles = Helpers.select('articles', 'article_id, article_name, article_description')
         
         if(len(all_articles) % 100 ==0):
             articles_to_fill = all_articles
         else:
-            articles_to_fill = Helpers.select('articles', 'article_id, article_name', filter, "article_id", False)[0:20]
-
+            articles_to_fill = Helpers.select('articles', 'article_id, article_name', None, "article_id", False)[0:11]
+        
         tfidf = TfidfVectorizer(stop_words='english')
         articles_df = pd.DataFrame(all_articles, columns=['article_id', 'article_name', 'article_description'])
         tfidf_matrix = tfidf.fit_transform(articles_df['article_description'])
         cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix, True)
-        
-        for elem in articles_to_fill:
+        for elem in articles_to_fill[::-1]:
             article_id = elem[0]
             article_name = elem[1]
             recommendations = Helpers.get_recommendations(article_name, article_id, cosine_sim, articles_df)
@@ -172,7 +172,8 @@ class Helpers():
                 if rec not in unique_recommendation and rec != article_id:
                     unique_recommendation.append(rec)
             recommendations = unique_recommendation
-
+            print(recommendations)
+            
             data = {
                 "recommendation_1_id" : recommendations[0],
                 "recommendation_2_id" : recommendations[1],
@@ -202,7 +203,7 @@ class Helpers():
 
         sim_scores = list(enumerate(cosine_sim[idx-1]))
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        sim_scores = sim_scores[1:11]
+        sim_scores = sim_scores[0:11]
         article_indices = [i[0] for i in sim_scores]
         res = [(i+1) for i in article_indices]
 

@@ -1,7 +1,5 @@
-import json
-import urllib.request,json
+import urllib.request, json
 
-from random import seed
 from .config import Config
 from random import randint
 from .models import Sources
@@ -167,6 +165,8 @@ def techArticles():
     tech_articles = newsapi.get_top_headlines(category='technology')
     
     all_articles = tech_articles['articles']
+    all_articles = all_articles[0:11]
+
     data_dict = {}
 
     for i in range(len(all_articles)):
@@ -213,10 +213,12 @@ def techArticles():
                                                   recommendation_3_id, recommendation_4_id, \
                                                   recommendation_5_id", 
                                 filter = f"main_article_id = {article_id}")[0]
-                                
+        print(recommendations_ids)
+        print('rrrrrrrrrrrrrrrrrrrrrrrrrrrrrr')
         recommended_names_links = Helpers.select(table_name = 'articles', 
                                         columns_select = "article_name, link_to_article", 
                                         filter = f"article_id IN {recommendations_ids}")
+        print(recommended_names_links)
         
         source.append("")
         title.append(main_article_info[1])
