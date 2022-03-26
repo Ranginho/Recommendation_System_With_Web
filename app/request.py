@@ -129,8 +129,14 @@ def businessArticles():
     business_articles = newsapi.get_top_headlines(category='business')
 
     all_articles = business_articles['articles']
+    all_articles = all_articles[0:10]
 
-    business_articles_results = []
+    for i in range(len(all_articles)):
+        article = all_articles[i]
+        data_dict = fill_article_data_to_insert(article, 'business')
+        Helpers.insert(table_name='articles', data=data_dict)
+
+    Helpers.fill_recommendations("business")
 
     source = []
     title = []
@@ -139,24 +145,45 @@ def businessArticles():
     img = []
     p_date = []
     url = []
+    contents = []
+    recommendation_names_links = []
 
-    for i in range(len(all_articles)):
-        article = all_articles[i]
+    business_articles = Helpers.select(table_name='articles', columns_select="*", filter="article_category = 'business'")
+    num_articles = len(business_articles)
+    article_ids_to_display = []
 
-        source.append(article['source'])
-        title.append(article['title'])
-        desc.append(article['description'])
-        author.append(article['author'])
-        img.append(article['urlToImage'])
-        p_date.append(article['publishedAt'])
-        url.append(article['url'])
+    num_articles_to_display = min(num_articles, ARTICLES_PER_PAGE)
 
-        article_object = Articles(source, title, desc, author, img, p_date, url)
+    for _ in range(num_articles_to_display):
+        article_index = randint(0, num_articles-1)
+        main_article_info = business_articles[article_index]
+        article_id = main_article_info[0]
 
-        business_articles_results.append(article_object)
+        if article_id in article_ids_to_display:
+            continue
+        else:
+            article_ids_to_display.append(article_id)
 
-        contents = zip(source, title, desc, author, img, p_date, url)
+        recommendations_ids = Helpers.select(table_name='recommendations',
+                                             columns_select="recommendation_1_id, recommendation_2_id, \
+                                                          recommendation_3_id, recommendation_4_id, \
+                                                          recommendation_5_id",
+                                             filter=f"main_article_id = {article_id}")[0]
 
+        recommended_names_links = Helpers.select(table_name='articles',
+                                                 columns_select="article_name, link_to_article",
+                                                 filter=f"article_id IN {recommendations_ids}")
+
+        source.append("")
+        title.append(main_article_info[1])
+        desc.append(main_article_info[2])
+        author.append(main_article_info[6])
+        img.append(main_article_info[3])
+        p_date.append(main_article_info[7])
+        url.append(main_article_info[4])
+        recommendation_names_links.append(recommended_names_links)
+
+    contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
     return  contents
 
 def techArticles():
@@ -165,23 +192,12 @@ def techArticles():
     tech_articles = newsapi.get_top_headlines(category='technology')
     
     all_articles = tech_articles['articles']
-    all_articles = all_articles[0:11]
-
-    data_dict = {}
+    all_articles = all_articles[0:10]
 
     for i in range(len(all_articles)):
         article = all_articles[i]
-        
-        data_dict['article_name'] = article['title']
-        data_dict['article_description'] = article['description'] if article['description'] is not None else 'N\A'
-        data_dict['article_image_path'] = article['urlToImage'] if article['urlToImage'] is not None else 'N\A'
-        data_dict['link_to_article'] = article['url'] if article['url'] is not None else 'N\A'
-        data_dict['article_category'] = 'technology'
-        data_dict['article_author'] = article['author'] if article['author'] is not None else 'N\A'
-        data_dict['article_publish_date'] = article['publishedAt'] if article['publishedAt'] is not None else 'N\A'
-
-        Helpers.insert(table_name = 'articles', data = data_dict)
-        data_dict = {}
+        data_dict = fill_article_data_to_insert(article, 'technology')
+        Helpers.insert(table_name='articles', data=data_dict)
 
     Helpers.fill_recommendations("technology")
 
@@ -195,30 +211,31 @@ def techArticles():
     contents = []
     recommendation_names_links = []
 
-    num_articles = len(Helpers.select(table_name = 'articles', columns_select="*"))
+    tech_articles = Helpers.select(table_name = 'articles', columns_select="*", filter = "article_category = 'technology'")
+    num_articles = len(tech_articles)
     article_ids_to_display = []
-    for _ in range(ARTICLES_PER_PAGE):
-        article_id = randint(1, num_articles)
+
+    num_articles_to_display = min(num_articles, ARTICLES_PER_PAGE)
+
+    for _ in range(num_articles_to_display):
+        article_index = randint(1, num_articles-1)
+        main_article_info = tech_articles[article_index]
+        article_id = main_article_info[0]
 
         if article_id in article_ids_to_display:
             continue
         else:
             article_ids_to_display.append(article_id)
 
-        main_article_info = Helpers.select(table_name = 'articles', columns_select="*", 
-                            filter = f"article_id = {article_id}")[0]
-
         recommendations_ids = Helpers.select(table_name = 'recommendations', 
                                 columns_select = "recommendation_1_id, recommendation_2_id, \
                                                   recommendation_3_id, recommendation_4_id, \
                                                   recommendation_5_id", 
                                 filter = f"main_article_id = {article_id}")[0]
-        print(recommendations_ids)
-        print('rrrrrrrrrrrrrrrrrrrrrrrrrrrrrr')
+
         recommended_names_links = Helpers.select(table_name = 'articles', 
                                         columns_select = "article_name, link_to_article", 
                                         filter = f"article_id IN {recommendations_ids}")
-        print(recommended_names_links)
         
         source.append("")
         title.append(main_article_info[1])
@@ -306,15 +323,20 @@ def techArticles():
     # contents = zip(source, title, desc, author, img, p_date, url)
     # return  contents
 
-
 def entArticles():
     newsapi = NewsApiClient(api_key= Config.API_KEY)
 
     ent_articles = newsapi.get_top_headlines(category='entertainment')
 
     all_articles = ent_articles['articles']
+    all_articles = all_articles[0:10]
 
-    ent_articles_results = []
+    for i in range(len(all_articles)):
+        article = all_articles[i]
+        data_dict = fill_article_data_to_insert(article, 'entertainment')
+        Helpers.insert(table_name='articles', data=data_dict)
+
+    Helpers.fill_recommendations("entertainment")
 
     source = []
     title = []
@@ -323,23 +345,45 @@ def entArticles():
     img = []
     p_date = []
     url = []
+    contents = []
+    recommendation_names_links = []
 
-    for i in range(len(all_articles)):
-        article = all_articles[i]
+    entertainment_articles = Helpers.select(table_name='articles', columns_select="*", filter="article_category = 'entertainment'")
+    num_articles = len(entertainment_articles)
+    article_ids_to_display = []
 
-        source.append(article['source'])
-        title.append(article['title'])
-        desc.append(article['description'])
-        author.append(article['author'])
-        img.append(article['urlToImage'])
-        p_date.append(article['publishedAt'])
-        url.append(article['url'])
+    num_articles_to_display = min(num_articles, ARTICLES_PER_PAGE)
 
-        article_object = Articles(source, title, desc, author, img, p_date, url)
+    for _ in range(num_articles_to_display):
+        article_index = randint(0, num_articles-1)
+        main_article_info = entertainment_articles[article_index]
+        article_id = main_article_info[0]
 
-        ent_articles_results.append(article_object)
+        if article_id in article_ids_to_display:
+            continue
+        else:
+            article_ids_to_display.append(article_id)
 
-        contents = zip(source, title, desc, author, img, p_date, url)
+        recommendations_ids = Helpers.select(table_name='recommendations',
+                                             columns_select="recommendation_1_id, recommendation_2_id, \
+                                                      recommendation_3_id, recommendation_4_id, \
+                                                      recommendation_5_id",
+                                             filter=f"main_article_id = {article_id}")[0]
+
+        recommended_names_links = Helpers.select(table_name='articles',
+                                                 columns_select="article_name, link_to_article",
+                                                 filter=f"article_id IN {recommendations_ids}")
+
+        source.append("")
+        title.append(main_article_info[1])
+        desc.append(main_article_info[2])
+        author.append(main_article_info[6])
+        img.append(main_article_info[3])
+        p_date.append(main_article_info[7])
+        url.append(main_article_info[4])
+        recommendation_names_links.append(recommended_names_links)
+
+    contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
 
     return  contents
 
@@ -349,8 +393,14 @@ def scienceArticles():
     science_articles = newsapi.get_top_headlines(category='science')
 
     all_articles = science_articles['articles']
+    all_articles = all_articles[0:10]
 
-    science_articles_results = []
+    for i in range(len(all_articles)):
+        article = all_articles[i]
+        data_dict = fill_article_data_to_insert(article, 'science')
+        Helpers.insert(table_name='articles', data=data_dict)
+
+    Helpers.fill_recommendations("science")
 
     source = []
     title = []
@@ -359,23 +409,46 @@ def scienceArticles():
     img = []
     p_date = []
     url = []
+    contents = []
+    recommendation_names_links = []
 
-    for i in range(len(all_articles)):
-        article = all_articles[i]
+    science_articles = Helpers.select(table_name='articles', columns_select="*",
+                                            filter="article_category = 'science'")
+    num_articles = len(science_articles)
+    article_ids_to_display = []
 
-        source.append(article['source'])
-        title.append(article['title'])
-        desc.append(article['description'])
-        author.append(article['author'])
-        img.append(article['urlToImage'])
-        p_date.append(article['publishedAt'])
-        url.append(article['url'])
+    num_articles_to_display = min(num_articles, ARTICLES_PER_PAGE)
 
-        article_object = Articles(source, title, desc, author, img, p_date, url)
+    for _ in range(num_articles_to_display):
+        article_index = randint(0, num_articles - 1)
+        main_article_info = science_articles[article_index]
+        article_id = main_article_info[0]
 
-        science_articles_results.append(article_object)
+        if article_id in article_ids_to_display:
+            continue
+        else:
+            article_ids_to_display.append(article_id)
 
-        contents = zip(source, title, desc, author, img, p_date, url)
+        recommendations_ids = Helpers.select(table_name='recommendations',
+                                             columns_select="recommendation_1_id, recommendation_2_id, \
+                                                          recommendation_3_id, recommendation_4_id, \
+                                                          recommendation_5_id",
+                                             filter=f"main_article_id = {article_id}")[0]
+
+        recommended_names_links = Helpers.select(table_name='articles',
+                                                 columns_select="article_name, link_to_article",
+                                                 filter=f"article_id IN {recommendations_ids}")
+
+        source.append("")
+        title.append(main_article_info[1])
+        desc.append(main_article_info[2])
+        author.append(main_article_info[6])
+        img.append(main_article_info[3])
+        p_date.append(main_article_info[7])
+        url.append(main_article_info[4])
+        recommendation_names_links.append(recommended_names_links)
+
+    contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
 
     return  contents
 
@@ -385,8 +458,14 @@ def sportArticles():
     sport_articles = newsapi.get_top_headlines(category='sports')
 
     all_articles = sport_articles['articles']
+    all_articles = all_articles[0:10]
 
-    sport_articles_results = []
+    for i in range(len(all_articles)):
+        article = all_articles[i]
+        data_dict = fill_article_data_to_insert(article, 'sports')
+        Helpers.insert(table_name='articles', data=data_dict)
+
+    Helpers.fill_recommendations("sports")
 
     source = []
     title = []
@@ -395,23 +474,46 @@ def sportArticles():
     img = []
     p_date = []
     url = []
+    contents = []
+    recommendation_names_links = []
 
-    for i in range(len(all_articles)):
-        article = all_articles[i]
+    sports_articles = Helpers.select(table_name='articles', columns_select="*",
+                                      filter="article_category = 'sports'")
+    num_articles = len(sports_articles)
+    article_ids_to_display = []
 
-        source.append(article['source'])
-        title.append(article['title'])
-        desc.append(article['description'])
-        author.append(article['author'])
-        img.append(article['urlToImage'])
-        p_date.append(article['publishedAt'])
-        url.append(article['url'])
+    num_articles_to_display = min(num_articles, ARTICLES_PER_PAGE)
 
-        article_object = Articles(source, title, desc, author, img, p_date, url)
+    for _ in range(num_articles_to_display):
+        article_index = randint(0, num_articles - 1)
+        main_article_info = sports_articles[article_index]
+        article_id = main_article_info[0]
 
-        sport_articles_results.append(article_object)
+        if article_id in article_ids_to_display:
+            continue
+        else:
+            article_ids_to_display.append(article_id)
 
-        contents = zip(source, title, desc, author, img, p_date, url)
+        recommendations_ids = Helpers.select(table_name='recommendations',
+                                             columns_select="recommendation_1_id, recommendation_2_id, \
+                                                              recommendation_3_id, recommendation_4_id, \
+                                                              recommendation_5_id",
+                                             filter=f"main_article_id = {article_id}")[0]
+
+        recommended_names_links = Helpers.select(table_name='articles',
+                                                 columns_select="article_name, link_to_article",
+                                                 filter=f"article_id IN {recommendations_ids}")
+
+        source.append("")
+        title.append(main_article_info[1])
+        desc.append(main_article_info[2])
+        author.append(main_article_info[6])
+        img.append(main_article_info[3])
+        p_date.append(main_article_info[7])
+        url.append(main_article_info[4])
+        recommendation_names_links.append(recommended_names_links)
+
+    contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
 
     return  contents
 
@@ -421,8 +523,14 @@ def healthArticles():
     health_articles = newsapi.get_top_headlines(category='health')
 
     all_articles = health_articles['articles']
+    all_articles = all_articles[0:10]
 
-    health_articles_results = []
+    for i in range(len(all_articles)):
+        article = all_articles[i]
+        data_dict = fill_article_data_to_insert(article, 'health')
+        Helpers.insert(table_name='articles', data=data_dict)
+
+    Helpers.fill_recommendations("health")
 
     source = []
     title = []
@@ -431,22 +539,46 @@ def healthArticles():
     img = []
     p_date = []
     url = []
+    contents = []
+    recommendation_names_links = []
 
-    for i in range(len(all_articles)):
-        article = all_articles[i]
+    health_articles = Helpers.select(table_name='articles', columns_select="*",
+                                     filter="article_category = 'health'")
+    num_articles = len(health_articles)
+    article_ids_to_display = []
 
-        source.append(article['source'])
-        title.append(article['title'])
-        desc.append(article['description'])
-        author.append(article['author'])
-        img.append(article['urlToImage'])
-        p_date.append(article['publishedAt'])
-        url.append(article['url'])
-        article_object = Articles(source, title, desc, author, img, p_date, url)
+    num_articles_to_display = min(num_articles, ARTICLES_PER_PAGE)
 
-        health_articles_results.append(article_object)
+    for _ in range(num_articles_to_display):
+        article_index = randint(0, num_articles - 1)
+        main_article_info = health_articles[article_index]
+        article_id = main_article_info[0]
 
-        contents = zip(source, title, desc, author, img, p_date, url)
+        if article_id in article_ids_to_display:
+            continue
+        else:
+            article_ids_to_display.append(article_id)
+
+        recommendations_ids = Helpers.select(table_name='recommendations',
+                                             columns_select="recommendation_1_id, recommendation_2_id, \
+                                                                  recommendation_3_id, recommendation_4_id, \
+                                                                  recommendation_5_id",
+                                             filter=f"main_article_id = {article_id}")[0]
+
+        recommended_names_links = Helpers.select(table_name='articles',
+                                                 columns_select="article_name, link_to_article",
+                                                 filter=f"article_id IN {recommendations_ids}")
+
+        source.append("")
+        title.append(main_article_info[1])
+        desc.append(main_article_info[2])
+        author.append(main_article_info[6])
+        img.append(main_article_info[3])
+        p_date.append(main_article_info[7])
+        url.append(main_article_info[4])
+        recommendation_names_links.append(recommended_names_links)
+
+    contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
 
     return  contents
 
@@ -482,3 +614,16 @@ def process_sources(source_list):
       news_source_object = Sources(name, description,url)
       news_source_result.append(news_source_object)
   return news_source_result
+
+def fill_article_data_to_insert(article: dict, category: str) -> dict:
+    data_dict = {}
+
+    data_dict['article_name'] = article['title']
+    data_dict['article_description'] = article['description'] if article['description'] is not None else 'N\A'
+    data_dict['article_image_path'] = article['urlToImage'] if article['urlToImage'] is not None else 'N\A'
+    data_dict['link_to_article'] = article['url'] if article['url'] is not None else 'N\A'
+    data_dict['article_category'] = category
+    data_dict['article_author'] = article['author'] if article['author'] is not None else 'N\A'
+    data_dict['article_publish_date'] = article['publishedAt'] if article['publishedAt'] is not None else 'N\A'
+
+    return data_dict

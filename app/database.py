@@ -164,7 +164,7 @@ class Helpers():
             article_id = elem[0]
             article_name = elem[1]
             recommendations = Helpers.get_recommendations(article_name, article_id, cosine_sim, articles_df)
-            recommendations = set(list(recommendations))
+            recommendations = list(set(list(recommendations)))[::-1]
 
             unique_recommendation = []
             for rec in recommendations:
