@@ -616,6 +616,16 @@ def process_sources(source_list):
   return news_source_result
 
 def fill_article_data_to_insert(article: dict, category: str) -> dict:
+    """ Using this method we fill dictionary with data to insert in database
+
+    Args:
+        article (dict) : Dictionary from where we should take information
+        category (str) : Category of article
+
+    Return:
+        data_dict (dict) : Dictionary filled with data to insert
+    """
+
     data_dict = {}
 
     data_dict['article_name'] = article['title']

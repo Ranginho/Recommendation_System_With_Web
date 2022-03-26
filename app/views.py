@@ -67,15 +67,8 @@ def health():
 
 @app.route('/recommendation')
 def recommendation_part():
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    #print(request.curr_content)
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     sources = techArticles()
 
-
-    
-    
     return  render_template('tech.html', sources = sources)
 
 @app.route('/category/recommendation1.html')
