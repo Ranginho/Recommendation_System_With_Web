@@ -1,0 +1,4 @@
+name: news_recommender
+channels:
+  - defaults
+prefix: C:\Users\admin\anaconda3\envs\news_recommender

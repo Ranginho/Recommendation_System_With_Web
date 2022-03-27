@@ -7,18 +7,20 @@ from .models import Articles
 from app.database import Helpers
 from newsapi import NewsApiClient
 
-api_key=None
-base_url=None
-base_url_for_everything=None
-base_url_top_headlines=None
-base_source_list=None
+api_key = None
+base_url = None
+base_url_for_everything = None
+base_url_top_headlines = None
+base_source_list = None
 
 ARTICLES_PER_PAGE = 10
 
-def publishedArticles():
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
 
-    get_articles = newsapi.get_everything(sources= 'cnn, reuters, cnbc, the-verge, gizmodo, the-next-web, techradar, recode, ars-technica')
+def publishedArticles():
+    newsapi = NewsApiClient(api_key=Config.API_KEY)
+
+    get_articles = newsapi.get_everything(
+        sources='cnn, reuters, cnbc, the-verge, gizmodo, the-next-web, techradar, recode, ars-technica')
 
     all_articles = get_articles['articles']
 
@@ -48,13 +50,15 @@ def publishedArticles():
         articles_results.append(article_object)
 
         contents = zip(source, title, desc, author, img, p_date, url)
-    
-    return  contents
+
+    return contents
+
 
 def topHeadlines():
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
+    newsapi = NewsApiClient(api_key=Config.API_KEY)
 
-    top_headlines = newsapi.get_top_headlines(sources= 'cnn, reuters, cnbc, techcrunch, the-verge, gizmodo, the-next-web, techradar, recode, ars-technica')
+    top_headlines = newsapi.get_top_headlines(
+        sources='cnn, reuters, cnbc, techcrunch, the-verge, gizmodo, the-next-web, techradar, recode, ars-technica')
 
     all_headlines = top_headlines['articles']
 
@@ -85,12 +89,13 @@ def topHeadlines():
 
         contents = zip(source, title, desc, author, img, p_date, url)
 
-    return  contents
+    return contents
+
 
 def randomArticles():
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
+    newsapi = NewsApiClient(api_key=Config.API_KEY)
 
-    random_articles = newsapi.get_everything(sources= 'the-verge, gizmodo, the-next-web, recode, ars-technica')
+    random_articles = newsapi.get_everything(sources='the-verge, gizmodo, the-next-web, recode, ars-technica')
 
     all_articles = random_articles['articles']
 
@@ -121,10 +126,11 @@ def randomArticles():
 
         contents = zip(source, title, desc, author, img, p_date, url)
 
-    return  contents
+    return contents
+
 
 def businessArticles():
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
+    newsapi = NewsApiClient(api_key=Config.API_KEY)
 
     business_articles = newsapi.get_top_headlines(category='business')
 
@@ -148,14 +154,15 @@ def businessArticles():
     contents = []
     recommendation_names_links = []
 
-    business_articles = Helpers.select(table_name='articles', columns_select="*", filter="article_category = 'business'")
+    business_articles = Helpers.select(table_name='articles', columns_select="*",
+                                       filter="article_category = 'business'")
     num_articles = len(business_articles)
     article_ids_to_display = []
 
     num_articles_to_display = min(num_articles, ARTICLES_PER_PAGE)
 
     for _ in range(num_articles_to_display):
-        article_index = randint(0, num_articles-1)
+        article_index = randint(0, num_articles - 1)
         main_article_info = business_articles[article_index]
         article_id = main_article_info[0]
 
@@ -184,13 +191,13 @@ def businessArticles():
         recommendation_names_links.append(recommended_names_links)
 
     contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
-    return  contents
+    return contents
+
 
 def techArticles():
-
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
+    newsapi = NewsApiClient(api_key=Config.API_KEY)
     tech_articles = newsapi.get_top_headlines(category='technology')
-    
+
     all_articles = tech_articles['articles']
     all_articles = all_articles[0:10]
 
@@ -211,14 +218,14 @@ def techArticles():
     contents = []
     recommendation_names_links = []
 
-    tech_articles = Helpers.select(table_name = 'articles', columns_select="*", filter = "article_category = 'technology'")
+    tech_articles = Helpers.select(table_name='articles', columns_select="*", filter="article_category = 'technology'")
     num_articles = len(tech_articles)
     article_ids_to_display = []
 
     num_articles_to_display = min(num_articles, ARTICLES_PER_PAGE)
 
     for _ in range(num_articles_to_display):
-        article_index = randint(1, num_articles-1)
+        article_index = randint(1, num_articles - 1)
         main_article_info = tech_articles[article_index]
         article_id = main_article_info[0]
 
@@ -227,16 +234,16 @@ def techArticles():
         else:
             article_ids_to_display.append(article_id)
 
-        recommendations_ids = Helpers.select(table_name = 'recommendations', 
-                                columns_select = "recommendation_1_id, recommendation_2_id, \
+        recommendations_ids = Helpers.select(table_name='recommendations',
+                                             columns_select="recommendation_1_id, recommendation_2_id, \
                                                   recommendation_3_id, recommendation_4_id, \
-                                                  recommendation_5_id", 
-                                filter = f"main_article_id = {article_id}")[0]
+                                                  recommendation_5_id",
+                                             filter=f"main_article_id = {article_id}")[0]
 
-        recommended_names_links = Helpers.select(table_name = 'articles', 
-                                        columns_select = "article_name, link_to_article", 
-                                        filter = f"article_id IN {recommendations_ids}")
-        
+        recommended_names_links = Helpers.select(table_name='articles',
+                                                 columns_select="article_name, link_to_article",
+                                                 filter=f"article_id IN {recommendations_ids}")
+
         source.append("")
         title.append(main_article_info[1])
         desc.append(main_article_info[2])
@@ -247,8 +254,8 @@ def techArticles():
         recommendation_names_links.append(recommended_names_links)
 
     contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
-    return  contents
-    #------------------------------------------------------------------------------------------
+    return contents
+    # ------------------------------------------------------------------------------------------
 
     # data = ''
     # with open('out.json') as json_file:
@@ -273,7 +280,7 @@ def techArticles():
     #                 'PostgreSQL Bloat: origins, monitoring and managing',
     #                 'Better together: New Microsoft integrations for easier collaboration',
     #                 'Build Zappos like faceted navigation with ElasticSearch']
-    
+
     # desc_list = ['(Credit: Independent.co.uk) Facebook recently announced a Bot platform for it is Messenger which provides businesses and individuals another way to communicate with people. What is a Chat bot? A computer program designed to simulate conversation with human users, especially over the Internet. Chat bot in PHP When I heard of it, my very first thought was to a bot in PHP. I started to find some SDK in this regard released by Facebook but none was present. I headed over to documentation which provided good information for starters. Ok! so without wasting further time, lets build our first Bot Timebot In order to create an Fb bot you will need two things to host your bot: A Facebook Page which will be like Home of Bot, People will visit the page, click on Message option to Interact with your bot. For example, suppose Pizza Hut introduce a bot for order related operations. What could they do that they integrate or host their bot on their official page, a fan can just click on Message button and send messages to order a Pizza, get new deals etc and they will get messages as if some human representatives is responding to them. It all depends how efficient a bot is.',
     #             'The Aite Group projects the blockchain market could be valued at $400 million by 2019. For that reason, some of the biggest names in banking, industry and technology have entered into the space to evaluate how this technology could change the financial world. IBM and Linux, for instance, have brought together some of the brightest minds in the industry and technology to work on blockchain technology through the Hyperledger Project. The Hyperledger Project is under the umbrella of the Linux Foundation, and seeks to incorporate findings by blockchain projects such as Blockstream, Ripple, Digital Asset Holdings and others in order to make blockchain technology useful for the world\'s biggest corporations. IBM has also contributed its own code to the project. According to John Wolpert, IBM\'s Global Blockchain Offering Director, when IBM and Linux began working together on the blockchain project, Linux made clear it wanted to "disrupt the disruption," in part with their findings, as well as the data gathered by projects such as Ripple, Ethereum and others exploring the blockchain. The Linux foundation announced its Hyperledger project on December 17, 2015. Just one day later, 2,300 companies had requested to join. The second-largest open source foundation in the history of open source had only 450 inquiries. "So, it\'s either going to be a holy mess or it\'s going to change the world," Wolpert said at The Blockchain Conference in San Francisco presented by Lighthouse Partners. As Wolford puts it, a team of IBMers is "on a quest" to understand and "do something important" with blockchain technology. "I don\'t know why we got this rap in the \'70s, way back, that we are not cool, that we\'re kind of stodgy, and that is not the IBM of my experience," Wolpert, who founded the taxi service Flywheel, explained. "We\'re the original crazy people.',
     #             'One of the largest and oldest organizations for computing professionals will kick off its annual conference on the future of mobile cloud computing tomorrow, where blockchain is scheduled to be one of the attractions. With more than 421,000 members in 260 countries, the Institute of Electrical and Electronics Engineers (IEEE) holding such a high-profile event has the potential to accelerate the rate of blockchain adoption by the engineering community. At the four-day conference, beginning Tuesday, the IEEE will host five blockchain seminars at the 702-year-old Exeter College of Oxford. The conference, IEEE Mobile Cloud 2016, is the organizations fourth annual event dedicated to mobile cloud computing services and engineering. Speaking at the event, hosted at Oxford University, professor Wei-Tek Tsai of the School of Computing, Informatics and Decision Systems engineering at Arizona State University will talk about the future of blockchain technology as an academic topic of research.',
@@ -285,7 +292,7 @@ def techArticles():
     #             'When we partnered with Microsoft in 2014 , we had one goal in mind: to help you be more productive anywhere and on any device. Since then, we\'ve introduced integrations that let you edit Microsoft Office files stored in your Dropbox directly from the web or on your mobile device . And just last week, we released a brand new Dropbox app for Windows 10 . Today we\'re excited to mark the next phase of our partnership with the release of two new integrations with Microsoft products. "This announcement is just the next step in our journey to make Office files more accessible no matter where they\'re stored. We\'re excited that Dropbox customers now have the capabilities to co-edit files in Office Online. They can now also send documents directly from Dropbox within their Outlook.com account, allowing them to better collaborate regardless of their device or location."',
     #             'I\'ve been looking at different facets implementations while working on REST Search API for my ecommerce store. Some of the solutions I saw were simple to achieve (like plain faceting by terms with single selection), while others required some thinking and some extra work. Today we will talk about Zappos facets, since in my mind they do interesting things with products grouping (seems like they refer to it as sidebar). One of the key things about Zappos facets implementation is multi select within active bracket , which significantly improves and simplifies navigation experience for end customers.'
     #             ]
-    
+
     # img_list = ['https://capacity.com/wp-content/uploads/2019/08/chatbot-4071274_1920.jpg.webp',
     #             'https://www.gmex-group.com/wp-content/uploads/2019/09/IBM_blockchain.jpg',
     #             'https://cloudfront-us-east-1.images.arcpublishing.com/coindesk/LJA3TSWCKFGBPFTSGIPCSXHBHQ.jpg',
@@ -296,7 +303,7 @@ def techArticles():
     #             'https://webapp.io/content/images/size/w2000/2019/11/postgres.png',
     #             'https://cdn.vox-cdn.com/thumbor/yph6twMZwnafqlcy1LT20wgoYgY=/0x0:2040x1360/920x613/filters:focal(857x517:1183x843):format(webp)/cdn.vox-cdn.com/uploads/chorus_image/image/70431477/DSCF1179.0.0.jpg',
     #             'https://miro.medium.com/max/1400/1*BmvPfSSm2G8C-khX1rhCGg.png']
-    
+
     # url_list = ['recommendation1.html',
     #             'recommendation2.html',
     #             'recommendation3.html',
@@ -323,8 +330,9 @@ def techArticles():
     # contents = zip(source, title, desc, author, img, p_date, url)
     # return  contents
 
+
 def entArticles():
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
+    newsapi = NewsApiClient(api_key=Config.API_KEY)
 
     ent_articles = newsapi.get_top_headlines(category='entertainment')
 
@@ -348,14 +356,15 @@ def entArticles():
     contents = []
     recommendation_names_links = []
 
-    entertainment_articles = Helpers.select(table_name='articles', columns_select="*", filter="article_category = 'entertainment'")
+    entertainment_articles = Helpers.select(table_name='articles', columns_select="*",
+                                            filter="article_category = 'entertainment'")
     num_articles = len(entertainment_articles)
     article_ids_to_display = []
 
     num_articles_to_display = min(num_articles, ARTICLES_PER_PAGE)
 
     for _ in range(num_articles_to_display):
-        article_index = randint(0, num_articles-1)
+        article_index = randint(0, num_articles - 1)
         main_article_info = entertainment_articles[article_index]
         article_id = main_article_info[0]
 
@@ -385,10 +394,11 @@ def entArticles():
 
     contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
 
-    return  contents
+    return contents
+
 
 def scienceArticles():
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
+    newsapi = NewsApiClient(api_key=Config.API_KEY)
 
     science_articles = newsapi.get_top_headlines(category='science')
 
@@ -413,7 +423,7 @@ def scienceArticles():
     recommendation_names_links = []
 
     science_articles = Helpers.select(table_name='articles', columns_select="*",
-                                            filter="article_category = 'science'")
+                                      filter="article_category = 'science'")
     num_articles = len(science_articles)
     article_ids_to_display = []
 
@@ -450,10 +460,11 @@ def scienceArticles():
 
     contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
 
-    return  contents
+    return contents
+
 
 def sportArticles():
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
+    newsapi = NewsApiClient(api_key=Config.API_KEY)
 
     sport_articles = newsapi.get_top_headlines(category='sports')
 
@@ -478,7 +489,7 @@ def sportArticles():
     recommendation_names_links = []
 
     sports_articles = Helpers.select(table_name='articles', columns_select="*",
-                                      filter="article_category = 'sports'")
+                                     filter="article_category = 'sports'")
     num_articles = len(sports_articles)
     article_ids_to_display = []
 
@@ -515,10 +526,11 @@ def sportArticles():
 
     contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
 
-    return  contents
+    return contents
+
 
 def healthArticles():
-    newsapi = NewsApiClient(api_key= Config.API_KEY)
+    newsapi = NewsApiClient(api_key=Config.API_KEY)
 
     health_articles = newsapi.get_top_headlines(category='health')
 
@@ -580,40 +592,43 @@ def healthArticles():
 
     contents = zip(source, title, desc, author, img, p_date, url, recommendation_names_links)
 
-    return  contents
+    return contents
+
 
 def get_news_source():
-  '''
+    '''
   Function that gets the json response to our url request
   '''
-  get_news_source_url = 'https://newsapi.org/v2/sources?apiKey=' + Config.API_KEY
-  with urllib.request.urlopen(get_news_source_url) as url:
-    get_news_source_data = url.read()
-    
-    get_news_source_response = json.loads(get_news_source_data)
-    print(get_news_source_response, "...................")
-    news_source_results = None
+    get_news_source_url = 'https://newsapi.org/v2/sources?apiKey=' + Config.API_KEY
+    with urllib.request.urlopen(get_news_source_url) as url:
+        get_news_source_data = url.read()
 
-    if get_news_source_response['sources']:
-      news_source_results_list = get_news_source_response['sources']
-      news_source_results = process_sources(news_source_results_list)
+        get_news_source_response = json.loads(get_news_source_data)
+        print(get_news_source_response, "...................")
+        news_source_results = None
 
-  return news_source_results
+        if get_news_source_response['sources']:
+            news_source_results_list = get_news_source_response['sources']
+            news_source_results = process_sources(news_source_results_list)
+
+    return news_source_results
+
 
 def process_sources(source_list):
-  '''
+    '''
   function that process the news articles and transform them to a list of objects
   '''
-  news_source_result = []
-  for news_source_item in source_list:
-    name = news_source_item.get('name')
-    description = news_source_item.get('description')
-    url = news_source_item.get('url')
+    news_source_result = []
+    for news_source_item in source_list:
+        name = news_source_item.get('name')
+        description = news_source_item.get('description')
+        url = news_source_item.get('url')
 
-    if name:
-      news_source_object = Sources(name, description,url)
-      news_source_result.append(news_source_object)
-  return news_source_result
+        if name:
+            news_source_object = Sources(name, description, url)
+            news_source_result.append(news_source_object)
+    return news_source_result
+
 
 def fill_article_data_to_insert(article: dict, category: str) -> dict:
     """ Using this method we fill dictionary with data to insert in database
