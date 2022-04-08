@@ -8,3 +8,6 @@ This is a web application that is used as a news recommendation system(based on 
 ## How to install and run the project:
 
 you need to install requirements.txt file and mysql, flask-sqlalchemy (simple pip install). I used dbbrowser for sql gui. When you install all these things, then you can run main.py file (python main.py from terminal) and enjoy the web app.
+
+## Visual:
+![ezgif-5-80799d1cc7](https://user-images.githubusercontent.com/85623531/162541855-83c5117f-f26a-49c7-9c94-d1c716e44591.gif)
